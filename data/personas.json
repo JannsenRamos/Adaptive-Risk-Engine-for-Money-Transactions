@@ -1,0 +1,66 @@
+[
+    {
+        "persona_id": "student_tng_01",
+        "label": "The Everyday Student",
+        "income_range": "< RM1,000",
+        "preferred_platform": "Touch N Go",
+        "behavioral_traits": {
+            "usage_frequency": "Several times a day (40%)",
+            "avg_daily_velocity": 5,
+            "primary_purposes": [
+                "Foods and Beverages",
+                "Transportation",
+                "Groceries"
+            ],
+            "purpose_weights": {
+                "food_bev": 0.82,
+                "transport": 0.60,
+                "groceries": 0.74,
+                "p2p_transfer": 0.20
+            }
+        },
+        "default_threshold": 0.5
+    },
+    {
+        "persona_id": "pro_mae_02",
+        "label": "The Functional Professional",
+        "income_range": "RM3,000 - RM5,000",
+        "preferred_platform": "MAE",
+        "behavioral_traits": {
+            "usage_frequency": "A few times a week",
+            "avg_daily_velocity": 2,
+            "primary_purposes": [
+                "Transferring Money",
+                "Utility Bills",
+                "Online Shopping"
+            ],
+            "purpose_weights": {
+                "p2p_transfer": 0.86,
+                "utility_bills": 0.63,
+                "online_shopping": 0.81,
+                "food_bev": 0.45
+            }
+        },
+        "default_threshold": 0.4
+    },
+    {
+        "persona_id": "senior_tng_03",
+        "label": "The Cautious Adopter",
+        "age_group": "50+",
+        "preferred_platform": "Touch N Go",
+        "behavioral_traits": {
+            "usage_frequency": "Once a day",
+            "avg_daily_velocity": 1,
+            "primary_purposes": [
+                "Groceries",
+                "Utility Bills"
+            ],
+            "purpose_weights": {
+                "groceries": 0.85,
+                "utility_bills": 0.50,
+                "p2p_transfer": 0.05
+            }
+        },
+        "default_threshold": 0.6
+    }
+]
