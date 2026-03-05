@@ -21,10 +21,19 @@ class FrictionSlider:
         self.w_preamble = cfg.get("w_preamble", 0.20)
         self.w_velocity = cfg.get("w_velocity", 0.15)
         self.w_amount   = cfg.get("w_amount",   0.10)
+        # Sharpness > 1 steepens the sigmoid so scores spread across the
+        # full [0.2, 0.9] output range, giving clear separation between
+        # normal (low) and attack (high) friction values.
+        self.sigmoid_sharpness = cfg.get("sigmoid_sharpness", 3.0)
 
     def _squash(self, x: float) -> float:
-        """Maps any risk score to [0.2, 0.9] via custom sigmoid."""
-        return 0.2 + (0.7 / (1 + np.exp(-x)))
+        """
+        Maps any risk score to [0.2, 0.9] via sigmoid.
+        sigmoid_sharpness controls steepness:
+          sharpness=1 → very flat (original, attacks ~0.61 — too low)
+          sharpness=3 → steep  (attacks ~0.70+, normals ~0.35)
+        """
+        return 0.2 + (0.7 / (1 + np.exp(-self.sigmoid_sharpness * x)))
 
     def calculate_friction(self,
                            p_model: float,
