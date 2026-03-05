@@ -1,0 +1,20 @@
+{
+    "friction_weights": {
+        "w_model": 0.25,
+        "w_drift": 0.30,
+        "w_preamble": 0.20,
+        "w_velocity": 0.15,
+        "w_amount": 0.10
+    },
+    "thresholds": {
+        "hard_block": 0.70,
+        "step_up": 0.50
+    },
+    "velocity": {
+        "burst_capacity": 3.0,
+        "off_hours_start": 23,
+        "off_hours_end": 6,
+        "off_hours_penalty": 1.5,
+        "daily_spend_multiplier": 3.0
+    }
+}
