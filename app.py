@@ -46,8 +46,12 @@ if "engines" not in st.session_state:
     st.session_state.engines = {}          # keyed by persona_id
 if "tx_log" not in st.session_state:
     st.session_state.tx_log = []
+if "wallets" not in st.session_state:
+    st.session_state.wallets = {}          # keyed by persona_id → current balance
+if "active_attack" not in st.session_state:
+    st.session_state.active_attack = None  # used by Try It buttons
 if "ml_model" not in st.session_state:
-    with st.spinner("Training ML model on synthetic data…"):
+    with st.spinner("Loading PaySim dataset & training ML model…"):
         model = SAVEModel()
         model.train()
     st.session_state.ml_model = model
@@ -78,6 +82,12 @@ if persona_id not in st.session_state.engines:
         ),
     }
 
+# Wallet balance — initialise once per persona with their starting balance
+_starting_balance = selected_persona.get("starting_balance", 500.0)
+if persona_id not in st.session_state.wallets:
+    st.session_state.wallets[persona_id] = _starting_balance
+current_balance = st.session_state.wallets[persona_id]
+
 engines   = st.session_state.engines[persona_id]
 retriever: ContextRetriever = engines["retriever"]
 velocity:  VelocityEngine   = engines["velocity"]
@@ -90,16 +100,40 @@ with st.sidebar.expander("📋 Persona Details", expanded=True):
     st.markdown(f"**Platform:** {selected_persona.get('preferred_platform', 'N/A')}")
     st.markdown(f"**Freq:** {selected_persona['behavioral_traits']['usage_frequency']}")
     st.markdown(f"**Daily Velocity:** {selected_persona['behavioral_traits']['avg_daily_velocity']} tx/day")
-    st.markdown(f"**Avg Daily Spend:** ₱{selected_persona['behavioral_traits'].get('avg_daily_spend', '?')}")
+    st.markdown(f"**Avg Daily Spend:** RM {selected_persona['behavioral_traits'].get('avg_daily_spend', '?')}")
+
+# ── ML data source badge ────────────────────────────────────────────────────
+_ml: SAVEModel = st.session_state.ml_model
+st.sidebar.caption(
+    f"📦 **ML trained on:** {_ml.data_source}  "
+    f"({_ml.training_rows:,} rows)"
+)
+
+# ── Wallet Card ─────────────────────────────
+st.sidebar.markdown("---")
+st.sidebar.subheader("💳 Wallet Balance")
+_bal_color = "normal" if current_balance > _starting_balance * 0.25 else "inverse"
+st.sidebar.metric(
+    label=f"RM Available ({persona_choice})",
+    value=f"RM {current_balance:,.2f}",
+    delta=f"RM {current_balance - _starting_balance:,.2f} from start",
+)
+if st.sidebar.button("🔄 Refresh Balance", key="refresh_balance", help="Reset wallet to starting balance"):
+    st.session_state.wallets[persona_id] = _starting_balance
+    st.rerun()
 
 st.sidebar.markdown("---")
 
+
 # ── Attack Vector Controls ──────────────────
 st.sidebar.header("⚠️ Attack Simulation")
-is_hijacked       = st.sidebar.toggle("🚨 Session Hijack",         value=False)
-is_cnp            = st.sidebar.toggle("💳 Card-Not-Present Fraud",  value=False)
-is_cred_stuff     = st.sidebar.toggle("🤖 Credential Stuffing",     value=False)
-is_account_drain  = st.sidebar.toggle("💸 Account Drain (Rapid Tx)", value=False)
+_atk = st.session_state.active_attack  # pre-set by Try It buttons
+is_hijacked       = st.sidebar.toggle("🚨 Session Hijack",          value=(_atk == "hijack"))
+is_cnp            = st.sidebar.toggle("💳 Card-Not-Present Fraud",  value=(_atk == "cnp"))
+is_cred_stuff     = st.sidebar.toggle("🤖 Credential Stuffing",      value=(_atk == "cred_stuff"))
+is_account_drain  = st.sidebar.toggle("💸 Account Drain (Rapid Tx)", value=(_atk == "account_drain"))
+# Clear the pre-set once rendered so toggling off works normally
+st.session_state.active_attack = None
 
 attack_active = any([is_hijacked, is_cnp, is_cred_stuff, is_account_drain])
 
@@ -124,8 +158,8 @@ with st.sidebar.expander("🔬 Expert Mode — Tune Weights", expanded=False):
 # ─────────────────────────────────────────────
 # Tabs
 # ─────────────────────────────────────────────
-tab_live, tab_session, tab_benchmark = st.tabs(
-    ["🔴 Live Monitor", "📋 Session Log", "📊 Benchmark Analysis"]
+tab_live, tab_session, tab_benchmark, tab_explainer = st.tabs(
+    ["🔴 Live Monitor", "📋 Session Log", "📊 Benchmark Analysis", "💡 How Attacks Work"]
 )
 
 # ══════════════════════════════════════════════
@@ -135,7 +169,17 @@ with tab_live:
     st.write("### Transaction Input")
     col_in1, col_in2 = st.columns(2)
     with col_in1:
-        amount = st.slider("Transaction Amount (₱)", 10, 50000, 500)
+        amount = st.number_input(
+            "Amount to Send (RM)",
+            min_value=1,
+            max_value=99999,
+            value=100,
+            step=50,
+            help="Type any amount. The engine scores in real-time.",
+        )
+        if amount > current_balance:
+            st.warning(f"⚠️ Amount exceeds wallet balance (RM {current_balance:,.2f}). "
+                       "Engine still scores — but this would be declined at the bank layer.")
     with col_in2:
         purpose_keys = list(selected_persona["behavioral_traits"]["purpose_weights"].keys())
         purpose = st.selectbox("Purpose", purpose_keys)
@@ -280,12 +324,28 @@ with tab_live:
     for r in reasons:
         st.markdown(f"- {r}")
 
-    # ── Log button ───────────────────────────
+    # ── Log + Submit button ──────────────────
     st.markdown("---")
-    if st.button("➕ Log This Transaction"):
+    btn_cols = st.columns([2, 1])
+    with btn_cols[0]:
+        submit_clicked = st.button("✅ Submit Transaction", type="primary", use_container_width=True)
+    with btn_cols[1]:
+        log_only = st.button("📝 Log Only", use_container_width=True)
+
+    if submit_clicked or log_only:
+        # Deduct balance only on auto-approved non-attack submissions
+        if submit_clicked and decision_label == "AUTO-APPROVE" and amount <= current_balance:
+            st.session_state.wallets[persona_id] -= amount
+            st.success(f"✅ Transaction approved. RM {amount:,} deducted — new balance: "
+                       f"RM {st.session_state.wallets[persona_id]:,.2f}")
+        elif submit_clicked and decision_label == "BLOCKED":
+            st.error("🔴 Transaction blocked. No funds deducted.")
+        elif submit_clicked and decision_label == "STEP-UP AUTH":
+            st.warning("🟡 Step-up required. Transaction held — no funds deducted.")
+
         st.session_state.tx_log.append({
             "Time":      datetime.now().strftime("%H:%M:%S"),
-            "Amount":    f"₱{amount:,}",
+            "Amount":    f"RM {amount:,}",
             "Purpose":   purpose,
             "Friction":  friction,
             "Decision":  decision_label,
@@ -294,7 +354,8 @@ with tab_live:
                                  ("CredStuff", is_cred_stuff), ("Drain", is_account_drain)] if f]
             ) or "None",
         })
-        st.success("Logged ✅")
+        if log_only:
+            st.info("📝 Logged (no funds moved).")
 
     st.caption(
         f"Hard block @ `{HARD_BLOCK}` · Step-up @ `{STEP_UP}` · "
@@ -307,7 +368,7 @@ with tab_live:
 with tab_session:
     st.write("### Transaction Session History")
     if not st.session_state.tx_log:
-        st.info("No transactions logged yet. Go to **Live Monitor**, set your inputs, and click **Log This Transaction**.")
+        st.info("No transactions logged yet. Go to **Live Monitor**, set your inputs, and click **Submit Transaction**.")
     else:
         df_log = pd.DataFrame(st.session_state.tx_log)
         st.dataframe(df_log, use_container_width=True)
@@ -425,3 +486,182 @@ with tab_benchmark:
         )
         fig_fi.update_layout(height=280, showlegend=False)
         st.plotly_chart(fig_fi, use_container_width=True)
+
+# ══════════════════════════════════════════════
+# TAB 4 — HOW ATTACKS WORK
+# ══════════════════════════════════════════════
+with tab_explainer:
+    st.write("### 💡 How Attacks Work — and How SAVE Detects Them")
+    st.caption(
+        "Each card below explains an attack vector: what the attacker does, "
+        "which SAVE signals spike, and why the engine flags it. "
+        "Click **Try It** to jump to Live Monitor with that attack pre-enabled."
+    )
+
+    # ── Helper: render a coloured impact badge ──
+    def _badge(level: str) -> str:
+        if level == "HIGH":   return "🔴 **HIGH**"
+        if level == "MEDIUM": return "🟡 **MEDIUM**"
+        return "🟢 Low"
+
+    # ── Attack definitions ──────────────────────
+    attacks = [
+        {
+            "key":   "hijack",
+            "emoji": "🚨",
+            "name":  "Session Hijack",
+            "what":  (
+                "The attacker takes over an **already authenticated session** — "
+                "e.g. by stealing a session token via XSS, a compromised device, "
+                "or a man-in-the-browser attack. The victim's credentials are not "
+                "needed because the session is already 'trusted'."
+            ),
+            "how": [
+                "Attacker injects or replays the victim's live session token.",
+                "They skip the usual app navigation (no balance check, no menu browsing).",
+                "A large P2P transfer is initiated instantly — a 'flash transaction'.",
+                "The app behaves exactly as if the real user sent the payment.",
+            ],
+            "detection": (
+                "The absence of natural app navigation before the payment is the "
+                "primary giveaway. SAVE's **Preamble Gate** scores this as 0.9 "
+                "friction. The **ML Model** also forces P(attack) = 0.90 because "
+                "the full behavioural pattern matches a hijack archetype."
+            ),
+            "impacts": {
+                "ML Model Score":   "HIGH",
+                "Purpose Drift":    "MEDIUM",
+                "Preamble Anomaly": "HIGH",
+                "Velocity Penalty": "Low",
+                "Amount Risk":      "MEDIUM",
+            },
+        },
+        {
+            "key":   "cnp",
+            "emoji": "💳",
+            "name":  "Card-Not-Present (CNP) Fraud",
+            "what":  (
+                "The attacker uses **stolen card details** (number, CVV, expiry) "
+                "without physically possessing the card. This is the most common "
+                "e-commerce fraud type. The device fingerprint is unknown and the "
+                "session has no prior history with the platform."
+            ),
+            "how": [
+                "Attacker obtains card data from a phishing kit or dark-web dump.",
+                "They create a new session on an unrecognised device or browser.",
+                "They skip to checkout directly — no browsing, no history.",
+                "A purchase or transfer is attempted, often to a mule account.",
+            ],
+            "detection": (
+                "The new/unknown device means no human preamble — **Preamble score = 0.9**. "
+                "The ML model receives a **+0.35 boost** to P(attack) to reflect "
+                "the unknown device fingerprint signal. Together these almost always "
+                "breach the Hard Block threshold."
+            ),
+            "impacts": {
+                "ML Model Score":   "HIGH",
+                "Purpose Drift":    "MEDIUM",
+                "Preamble Anomaly": "HIGH",
+                "Velocity Penalty": "Low",
+                "Amount Risk":      "MEDIUM",
+            },
+        },
+        {
+            "key":   "cred_stuff",
+            "emoji": "🤖",
+            "name":  "Credential Stuffing",
+            "what":  (
+                "Bots use **leaked username/password pairs** from other data breaches "
+                "and try them in bulk against the app. Successful logins are handed off "
+                "for fraud. The volume is high but each individual attempt looks like "
+                "a fresh, legitimate login from a new device."
+            ),
+            "how": [
+                "Bot cycles through thousands of credential pairs automatically.",
+                "On a successful login, the session is immediately used for a transaction.",
+                "No prior app behaviour — the bot doesn't browse, it just pays.",
+                "The transaction may be modest to avoid obvious amount-risk flags.",
+            ],
+            "detection": (
+                "No natural session preamble is the strongest signal — **Preamble = 0.9**. "
+                "The ML model gets a **+0.25 boost** for the credential stuffing pattern "
+                "(new device, no history, immediate transact). "
+                "Amount risk may be low, but preamble + ML together are enough to trigger Step-Up."
+            ),
+            "impacts": {
+                "ML Model Score":   "HIGH",
+                "Purpose Drift":    "Low",
+                "Preamble Anomaly": "HIGH",
+                "Velocity Penalty": "Low",
+                "Amount Risk":      "Low",
+            },
+        },
+        {
+            "key":   "account_drain",
+            "emoji": "💸",
+            "name":  "Account Drain (Rapid Transactions)",
+            "what":  (
+                "The attacker has access to the account (via hijack or credential stuffing) "
+                "and **rapidly fires multiple large transactions** to drain the balance "
+                "before the victim notices. The goal is speed — move funds before any "
+                "manual review or system block can occur."
+            ),
+            "how": [
+                "Attacker queues several large P2P transfers in quick succession.",
+                "Each transaction depletes the velocity token bucket further.",
+                "Amounts are typically large — often a significant % of daily limit.",
+                "Transactions happen at unusual hours to delay victim detection.",
+            ],
+            "detection": (
+                "The **Velocity Engine's token bucket** drains rapidly: once tokens hit 0, "
+                "the penalty multiplier doubles (×2). Cumulative daily spend exceeding "
+                "the persona's limit multiplies the penalty further (up to ×3). "
+                "Large per-transaction **Amount Risk** scores combine with velocity "
+                "to push friction well above the Hard Block threshold."
+            ),
+            "impacts": {
+                "ML Model Score":   "MEDIUM",
+                "Purpose Drift":    "MEDIUM",
+                "Preamble Anomaly": "Low",
+                "Velocity Penalty": "HIGH",
+                "Amount Risk":      "HIGH",
+            },
+        },
+    ]
+
+    # ── Render each attack card ─────────────────
+    for atk in attacks:
+        with st.expander(f"{atk['emoji']} {atk['name']}", expanded=False):
+            st.markdown(f"**What is it?**\n\n{atk['what']}")
+            st.markdown("---")
+
+            col_steps, col_table = st.columns([1.2, 1])
+
+            with col_steps:
+                st.markdown("**🔍 How the attacker behaves:**")
+                for i, step in enumerate(atk["how"], 1):
+                    st.markdown(f"{i}. {step}")
+                st.markdown("")
+                st.markdown("**🛡️ How SAVE detects it:**")
+                st.info(atk["detection"])
+
+            with col_table:
+                st.markdown("**📊 Signal Impact at a Glance:**")
+                rows = []
+                for signal, level in atk["impacts"].items():
+                    rows.append(f"| {signal} | {_badge(level)} |")
+                table_md = (
+                    "| Signal | Impact |\n"
+                    "|---|---|\n" +
+                    "\n".join(rows)
+                )
+                st.markdown(table_md)
+
+            st.markdown("")
+            if st.button(
+                f"▶ Try It — Enable {atk['name']}",
+                key=f"try_{atk['key']}",
+                help="Switches to Live Monitor with this attack pre-enabled",
+            ):
+                st.session_state.active_attack = atk["key"]
+                st.rerun()

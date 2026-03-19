@@ -21,7 +21,8 @@
                 "p2p_transfer": 0.20
             }
         },
-        "default_threshold": 0.5
+        "default_threshold": 0.5,
+        "starting_balance": 350.00
     },
     {
         "persona_id": "pro_mae_02",
@@ -45,7 +46,8 @@
                 "food_bev": 0.45
             }
         },
-        "default_threshold": 0.4
+        "default_threshold": 0.4,
+        "starting_balance": 2500.00
     },
     {
         "persona_id": "senior_tng_03",
@@ -67,7 +69,8 @@
                 "p2p_transfer": 0.05
             }
         },
-        "default_threshold": 0.6
+        "default_threshold": 0.6,
+        "starting_balance": 800.00
     },
     {
         "persona_id": "freelancer_04",
@@ -92,7 +95,8 @@
                 "crypto": 0.25
             }
         },
-        "default_threshold": 0.45
+        "default_threshold": 0.45,
+        "starting_balance": 4000.00
     },
     {
         "persona_id": "sme_owner_05",
@@ -117,7 +121,8 @@
                 "payroll": 0.88
             }
         },
-        "default_threshold": 0.35
+        "default_threshold": 0.35,
+        "starting_balance": 12000.00
     },
     {
         "persona_id": "tourist_06",
@@ -141,6 +146,7 @@
                 "p2p_transfer": 0.10
             }
         },
-        "default_threshold": 0.55
+        "default_threshold": 0.55,
+        "starting_balance": 3500.00
     }
 ]
