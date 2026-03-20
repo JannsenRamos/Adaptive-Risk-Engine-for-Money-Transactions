@@ -1,4 +1,4 @@
-<![CDATA[# 🛡️ SAVE: Session-Aware Velocity Engine
+# 🛡️ SAVE: Session-Aware Velocity Engine
 
 > An adaptive, real-time fraud risk scoring engine for digital money transactions — built with Streamlit, scikit-learn, and Plotly.
 
@@ -13,14 +13,14 @@
 
 **SAVE Engine** is an interactive fraud-detection simulator that demonstrates how adaptive risk scoring works in real-time payment systems. It combines a **machine-learning model** (Random Forest trained on the [PaySim](https://www.kaggle.com/datasets/ealaxi/paysim1) dataset) with **rule-based heuristics** to produce a single _friction score_ for every transaction — determining whether it is **auto-approved**, requires **step-up authentication**, or is **hard-blocked**.
 
-The system is persona-driven: each simulated user (student, professional, freelancer, tourist, etc.) has unique behavioral baselines, and the engine adapts its risk thresholds accordingly.
+The system is persona-driven: each simulated user has unique behavioral baselines, and the engine adapts its risk thresholds accordingly.
 
 ---
 
 ## ✨ Key Features
 
 | Feature | Description |
-|---|---|
+| :--- | :--- |
 | **Live Risk Monitor** | Real-time friction gauge, signal breakdown bars, and waterfall chart for every transaction |
 | **5-Signal Scoring** | ML Model probability, Purpose Drift, Preamble Anomaly, Velocity Penalty, and Amount Risk |
 | **Persona System** | 6 configurable user personas with distinct spending profiles, platforms, and wallet balances |
@@ -60,7 +60,7 @@ Adaptive-Risk-Engine-for-Money-Transactions/
 
 ## 🔬 How the Scoring Works
 
-Each transaction is scored through a **five-signal pipeline**, then passed through a **sigmoid squash function** to produce a final friction score in **[0.2 – 0.9]**:
+Each transaction passes through a **five-signal pipeline**, then a **sigmoid squash function** produces a final friction score in **[0.2 – 0.9]**:
 
 ```
                     ┌─────────────────────┐
@@ -84,36 +84,40 @@ Each transaction is scored through a **five-signal pipeline**, then passed throu
               ┌──────────────┼──────────────┐
               ▼              ▼              ▼
          < step_up     < hard_block     ≥ hard_block
-        AUTO-APPROVE    STEP-UP AUTH     HARD BLOCK
+        AUTO-APPROVE    STEP-UP AUTH      HARD BLOCK
 ```
 
 Default thresholds (configurable in `weights_config.json`):
-- **Step-Up:** `0.48`
-- **Hard Block:** `0.65`
+
+| Decision | Threshold |
+| :--- | :---: |
+| 🟢 Auto-Approve | `< 0.48` |
+| 🟡 Step-Up Auth | `0.48 – 0.65` |
+| 🔴 Hard Block | `≥ 0.65` |
 
 ---
 
 ## 👤 Personas
 
-| Persona | Platform | Age | Avg Daily Spend | Starting Balance |
-|---|---|---|---|---|
-| The Everyday Student | Touch N Go | 18-24 | RM 80 | RM 350 |
-| The Functional Professional | MAE | 28-40 | RM 350 | RM 2,500 |
+| Persona | Platform | Age Group | Avg Daily Spend | Starting Balance |
+| :--- | :---: | :---: | ---: | ---: |
+| The Everyday Student | Touch N Go | 18–24 | RM 80 | RM 350 |
+| The Functional Professional | MAE | 28–40 | RM 350 | RM 2,500 |
 | The Cautious Adopter | Touch N Go | 50+ | RM 60 | RM 800 |
-| The Digital Freelancer | MAE | 25-35 | RM 500 | RM 4,000 |
-| The Small Biz Owner | MAE | 35-50 | RM 2,000 | RM 12,000 |
-| The Visiting Tourist | Touch N Go | 25-45 | RM 800 | RM 3,500 |
+| The Digital Freelancer | MAE | 25–35 | RM 500 | RM 4,000 |
+| The Small Biz Owner | MAE | 35–50 | RM 2,000 | RM 12,000 |
+| The Visiting Tourist | Touch N Go | 25–45 | RM 800 | RM 3,500 |
 
 ---
 
 ## ⚠️ Attack Vectors
 
-The simulator supports four real-world attack scenarios:
-
-1. **🚨 Session Hijack** — Attacker takes over an authenticated session; ML score forced to 0.90, preamble gate flags the missing navigation.
-2. **💳 Card-Not-Present (CNP)** — Stolen card details on an unknown device; ML score boosted by +0.35.
-3. **🤖 Credential Stuffing** — Bot-driven login with leaked credentials; ML score boosted by +0.25, zero preamble.
-4. **💸 Account Drain** — Rapid-fire large transactions to empty the wallet; velocity token bucket depletes and penalty multiplier spikes.
+| Attack | How it Works | Primary Signals Triggered |
+| :--- | :--- | :--- |
+| 🚨 **Session Hijack** | Attacker takes over an authenticated session (stolen token/XSS) | ML score forced to 0.90 · Preamble = 0.9 |
+| 💳 **Card-Not-Present (CNP)** | Stolen card details used from an unknown device | ML score +0.35 boost · Preamble = 0.9 |
+| 🤖 **Credential Stuffing** | Bot cycles leaked credentials; jumps straight to payment | ML score +0.25 boost · Preamble = 0.9 |
+| 💸 **Account Drain** | Rapid-fire large transfers to empty the wallet | Velocity penalty ×2–3 · Amount Risk spikes |
 
 ---
 
@@ -122,7 +126,7 @@ The simulator supports four real-world attack scenarios:
 ### Prerequisites
 
 - **Python 3.10+**
-- (Optional) [PaySim dataset](https://www.kaggle.com/datasets/ealaxi/paysim1) — place the CSV in `data/`. Without it, the ML model falls back to synthetic training data.
+- *(Optional)* [PaySim dataset](https://www.kaggle.com/datasets/ealaxi/paysim1) — place the CSV in `data/`. Without it, the engine falls back to synthetic training data automatically.
 
 ### Installation
 
@@ -131,13 +135,13 @@ The simulator supports four real-world attack scenarios:
 git clone https://github.com/JannsenRamos/Adaptive-Risk-Engine-for-Money-Transactions.git
 cd Adaptive-Risk-Engine-for-Money-Transactions
 
-# Create a virtual environment
+# Create and activate a virtual environment
 python -m venv venv
 
-# Activate (Windows)
+# Windows
 venv\Scripts\activate
-# Activate (macOS/Linux)
-# source venv/bin/activate
+# macOS / Linux
+source venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
@@ -149,39 +153,39 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-The app opens at **http://localhost:8501** with the Live Monitor ready.
+The app opens at **http://localhost:8501**.
 
 ---
 
 ## ⚙️ Configuration
 
-All scoring parameters are centralized in [`data/weights_config.json`](data/weights_config.json):
+All scoring parameters live in [`data/weights_config.json`](data/weights_config.json):
 
-```jsonc
+```json
 {
   "friction_weights": {
-    "w_model": 0.25,       // ML model contribution
-    "w_drift": 0.30,       // Purpose drift contribution
-    "w_preamble": 0.20,    // Preamble anomaly contribution
-    "w_velocity": 0.15,    // Velocity penalty contribution
-    "w_amount": 0.10,      // Amount risk contribution
+    "w_model":           0.25,
+    "w_drift":           0.30,
+    "w_preamble":        0.20,
+    "w_velocity":        0.15,
+    "w_amount":          0.10,
     "sigmoid_sharpness": 3.0
   },
   "thresholds": {
     "hard_block": 0.65,
-    "step_up": 0.48
+    "step_up":    0.48
   },
   "velocity": {
-    "burst_capacity": 3.0,
-    "off_hours_start": 23,
-    "off_hours_end": 6,
-    "off_hours_penalty": 1.5,
+    "burst_capacity":        3.0,
+    "off_hours_start":       23,
+    "off_hours_end":         6,
+    "off_hours_penalty":     1.5,
     "daily_spend_multiplier": 3.0
   }
 }
 ```
 
-Weights can also be tuned live via the **Expert Mode** panel in the sidebar.
+> Weights can also be tuned **live** via the Expert Mode panel in the sidebar without restarting the app.
 
 ---
 
@@ -189,32 +193,34 @@ Weights can also be tuned live via the **Expert Mode** panel in the sidebar.
 
 The **Benchmark Analysis** tab runs a population-scale simulation and reports:
 
-- **Precision / Recall** — classification quality of the friction threshold
-- **Confusion Matrix** — interactive heatmap (TP, FP, TN, FN)
-- **Net Error Revenue (NER)** — `Fraud Prevented − Churn Cost` economic metric
-- **ROI Ratio** — return on investment of the fraud engine
-- **Friction Distribution** — histogram overlay of normal vs. attack friction scores
-- **ML Feature Importances** — bar chart of RandomForest feature weights
+| Metric | Description |
+| :--- | :--- |
+| **Precision / Recall** | Classification quality of the friction threshold |
+| **Confusion Matrix** | Interactive heatmap (TP, FP, TN, FN) |
+| **Net Error Revenue (NER)** | `Fraud Prevented − Churn Cost` economic metric |
+| **ROI Ratio** | Return on investment of the fraud engine |
+| **Friction Distribution** | Histogram overlay of normal vs. attack scores |
+| **ML Feature Importances** | Bar chart of RandomForest feature weights |
 
 ---
 
 ## 🛠️ Tech Stack
 
 | Layer | Technology |
-|---|---|
+| :--- | :--- |
 | Frontend | Streamlit, Plotly |
-| ML Model | scikit-learn (RandomForest) |
-| Data | Pandas, NumPy |
-| Dataset | [PaySim](https://www.kaggle.com/datasets/ealaxi/paysim1) (Kaggle) |
-| Config | JSON-driven weights & personas |
+| ML Model | scikit-learn (RandomForestClassifier) |
+| Data Processing | Pandas, NumPy |
+| Training Dataset | [PaySim](https://www.kaggle.com/datasets/ealaxi/paysim1) (Kaggle) |
+| Configuration | JSON-driven weights & personas |
 
 ---
 
 ## 📂 Data Sources
 
-| Source | Purpose |
-|---|---|
-| **PaySim** (Kaggle) | ~6.3M synthetic mobile money transactions with fraud labels; used to train the RandomForest |
+| Source | Details |
+| :--- | :--- |
+| **PaySim** (Kaggle) | ~6.3M synthetic mobile money transactions with fraud labels; primary training data |
 | **Synthetic fallback** | Auto-generated when PaySim CSV is absent — 2,000 normal + 400 attack samples |
 | **Personas** | 6 hand-crafted user archetypes reflecting Malaysian e-wallet demographics |
 
@@ -229,4 +235,3 @@ This project is available under the [MIT License](LICENSE).
 <p align="center">
   Built with ❤️ using Streamlit & scikit-learn
 </p>
-]]>
