@@ -2,13 +2,13 @@
     {
         "persona_id": "student_tng_01",
         "label": "The Everyday Student",
-        "income_range": "< RM1,000",
+        "income_range": "< ₱10,000",
         "age_group": "18-24",
         "preferred_platform": "Touch N Go",
         "behavioral_traits": {
             "usage_frequency": "Several times a day (40%)",
             "avg_daily_velocity": 5,
-            "avg_daily_spend": 80,
+            "avg_daily_spend": 800,
             "primary_purposes": [
                 "Foods and Beverages",
                 "Transportation",
@@ -22,18 +22,18 @@
             }
         },
         "default_threshold": 0.5,
-        "starting_balance": 350.00
+        "starting_balance": 3500.00
     },
     {
         "persona_id": "pro_mae_02",
         "label": "The Functional Professional",
-        "income_range": "RM3,000 - RM5,000",
+        "income_range": "₱30,000 - ₱50,000",
         "age_group": "28-40",
         "preferred_platform": "MAE",
         "behavioral_traits": {
             "usage_frequency": "A few times a week",
             "avg_daily_velocity": 2,
-            "avg_daily_spend": 350,
+            "avg_daily_spend": 3500,
             "primary_purposes": [
                 "Transferring Money",
                 "Utility Bills",
@@ -47,18 +47,18 @@
             }
         },
         "default_threshold": 0.4,
-        "starting_balance": 2500.00
+        "starting_balance": 25000.00
     },
     {
         "persona_id": "senior_tng_03",
         "label": "The Cautious Adopter",
-        "income_range": "RM1,000 - RM2,000",
+        "income_range": "₱10,000 - ₱20,000",
         "age_group": "50+",
         "preferred_platform": "Touch N Go",
         "behavioral_traits": {
             "usage_frequency": "Once a day",
             "avg_daily_velocity": 1,
-            "avg_daily_spend": 60,
+            "avg_daily_spend": 600,
             "primary_purposes": [
                 "Groceries",
                 "Utility Bills"
@@ -70,18 +70,18 @@
             }
         },
         "default_threshold": 0.6,
-        "starting_balance": 800.00
+        "starting_balance": 8000.00
     },
     {
         "persona_id": "freelancer_04",
         "label": "The Digital Freelancer",
-        "income_range": "RM2,000 - RM6,000",
+        "income_range": "₱20,000 - ₱60,000",
         "age_group": "25-35",
         "preferred_platform": "MAE",
         "behavioral_traits": {
             "usage_frequency": "Daily, variable",
             "avg_daily_velocity": 4,
-            "avg_daily_spend": 500,
+            "avg_daily_spend": 5000,
             "primary_purposes": [
                 "P2P Transfer",
                 "Online Shopping",
@@ -96,18 +96,18 @@
             }
         },
         "default_threshold": 0.45,
-        "starting_balance": 4000.00
+        "starting_balance": 40000.00
     },
     {
         "persona_id": "sme_owner_05",
         "label": "The Small Biz Owner",
-        "income_range": "RM5,000 - RM15,000",
+        "income_range": "₱50,000 - ₱150,000",
         "age_group": "35-50",
         "preferred_platform": "MAE",
         "behavioral_traits": {
             "usage_frequency": "Many times a day",
             "avg_daily_velocity": 10,
-            "avg_daily_spend": 2000,
+            "avg_daily_spend": 20000,
             "primary_purposes": [
                 "Supplier Payments",
                 "Payroll",
@@ -122,18 +122,18 @@
             }
         },
         "default_threshold": 0.35,
-        "starting_balance": 12000.00
+        "starting_balance": 120000.00
     },
     {
         "persona_id": "tourist_06",
         "label": "The Visiting Tourist",
-        "income_range": "> RM5,000",
+        "income_range": "> ₱50,000",
         "age_group": "25-45",
         "preferred_platform": "Touch N Go",
         "behavioral_traits": {
             "usage_frequency": "Burst activity, short window",
             "avg_daily_velocity": 8,
-            "avg_daily_spend": 800,
+            "avg_daily_spend": 8000,
             "primary_purposes": [
                 "Food & Attractions",
                 "Transport",
@@ -147,6 +147,6 @@
             }
         },
         "default_threshold": 0.55,
-        "starting_balance": 3500.00
+        "starting_balance": 35000.00
     }
 ]

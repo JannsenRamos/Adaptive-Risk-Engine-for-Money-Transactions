@@ -100,7 +100,7 @@ with st.sidebar.expander("📋 Persona Details", expanded=True):
     st.markdown(f"**Platform:** {selected_persona.get('preferred_platform', 'N/A')}")
     st.markdown(f"**Freq:** {selected_persona['behavioral_traits']['usage_frequency']}")
     st.markdown(f"**Daily Velocity:** {selected_persona['behavioral_traits']['avg_daily_velocity']} tx/day")
-    st.markdown(f"**Avg Daily Spend:** RM {selected_persona['behavioral_traits'].get('avg_daily_spend', '?')}")
+    st.markdown(f"**Avg Daily Spend:** ₱ {selected_persona['behavioral_traits'].get('avg_daily_spend', '?')}")
 
 # ── ML data source badge ────────────────────────────────────────────────────
 _ml: SAVEModel = st.session_state.ml_model
@@ -114,9 +114,9 @@ st.sidebar.markdown("---")
 st.sidebar.subheader("💳 Wallet Balance")
 _bal_color = "normal" if current_balance > _starting_balance * 0.25 else "inverse"
 st.sidebar.metric(
-    label=f"RM Available ({persona_choice})",
-    value=f"RM {current_balance:,.2f}",
-    delta=f"RM {current_balance - _starting_balance:,.2f} from start",
+    label=f"₱ Available ({persona_choice})",
+    value=f"₱ {current_balance:,.2f}",
+    delta=f"₱ {current_balance - _starting_balance:,.2f} from start",
 )
 if st.sidebar.button("🔄 Refresh Balance", key="refresh_balance", help="Reset wallet to starting balance"):
     st.session_state.wallets[persona_id] = _starting_balance
@@ -170,7 +170,7 @@ with tab_live:
     col_in1, col_in2 = st.columns(2)
     with col_in1:
         amount = st.number_input(
-            "Amount to Send (RM)",
+            "Amount to Send (₱)",
             min_value=1,
             max_value=99999,
             value=100,
@@ -178,7 +178,7 @@ with tab_live:
             help="Type any amount. The engine scores in real-time.",
         )
         if amount > current_balance:
-            st.warning(f"⚠️ Amount exceeds wallet balance (RM {current_balance:,.2f}). "
+            st.warning(f"⚠️ Amount exceeds wallet balance (₱ {current_balance:,.2f}). "
                        "Engine still scores — but this would be declined at the bank layer.")
     with col_in2:
         purpose_keys = list(selected_persona["behavioral_traits"]["purpose_weights"].keys())
@@ -336,8 +336,8 @@ with tab_live:
         # Deduct balance only on auto-approved non-attack submissions
         if submit_clicked and decision_label == "AUTO-APPROVE" and amount <= current_balance:
             st.session_state.wallets[persona_id] -= amount
-            st.success(f"✅ Transaction approved. RM {amount:,} deducted — new balance: "
-                       f"RM {st.session_state.wallets[persona_id]:,.2f}")
+            st.success(f"✅ Transaction approved. ₱ {amount:,} deducted — new balance: "
+                       f"₱ {st.session_state.wallets[persona_id]:,.2f}")
         elif submit_clicked and decision_label == "BLOCKED":
             st.error("🔴 Transaction blocked. No funds deducted.")
         elif submit_clicked and decision_label == "STEP-UP AUTH":
@@ -345,7 +345,7 @@ with tab_live:
 
         st.session_state.tx_log.append({
             "Time":      datetime.now().strftime("%H:%M:%S"),
-            "Amount":    f"RM {amount:,}",
+            "Amount":    f"₱ {amount:,}",
             "Purpose":   purpose,
             "Friction":  friction,
             "Decision":  decision_label,

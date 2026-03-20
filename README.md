@@ -101,12 +101,12 @@ Default thresholds (configurable in `weights_config.json`):
 
 | Persona | Platform | Age Group | Avg Daily Spend | Starting Balance |
 | :--- | :---: | :---: | ---: | ---: |
-| The Everyday Student | Touch N Go | 18–24 | RM 80 | RM 350 |
-| The Functional Professional | MAE | 28–40 | RM 350 | RM 2,500 |
-| The Cautious Adopter | Touch N Go | 50+ | RM 60 | RM 800 |
-| The Digital Freelancer | MAE | 25–35 | RM 500 | RM 4,000 |
-| The Small Biz Owner | MAE | 35–50 | RM 2,000 | RM 12,000 |
-| The Visiting Tourist | Touch N Go | 25–45 | RM 800 | RM 3,500 |
+| The Everyday Student | Touch N Go | 18–24 | ₱ 800 | ₱ 3,500 |
+| The Functional Professional | MAE | 28–40 | ₱ 3,500 | ₱ 25,000 |
+| The Cautious Adopter | Touch N Go | 50+ | ₱ 600 | ₱ 8,000 |
+| The Digital Freelancer | MAE | 25–35 | ₱ 5,000 | ₱ 40,000 |
+| The Small Biz Owner | MAE | 35–50 | ₱ 20,000 | ₱ 120,000 |
+| The Visiting Tourist | Touch N Go | 25–45 | ₱ 8,000 | ₱ 35,000 |
 
 ---
 
